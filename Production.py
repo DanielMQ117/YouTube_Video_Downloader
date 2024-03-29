@@ -1,5 +1,4 @@
 
-from logging import PlaceHolder
 import re
 import ffmpeg as fm
 from PIL import Image
@@ -21,12 +20,6 @@ Ctk.set_appearance_mode('dark')
 Ctk.set_default_color_theme('green')
 
 
-def button_event():
-
-    print("S")
-    pass
-
-
 def video_Combobox_callback(choice):
     print("combobox dropdown clicked:", choice)
 
@@ -45,18 +38,12 @@ class App(Ctk.CTk):
 
         self.resizable(False, 0)            # type: ignore
         self.title("Video Downloader")
-        #self.grid_rowconfigure(2, weight=1)
-        #self.grid_columnconfigure(0, weight=1)
 
         self.root0Frame = Ctk.CTkFrame(self, corner_radius=6, fg_color="gray84", height=100)
         self.root0Frame.grid(row=0, column=0, sticky=Ctk.NSEW, padx=10, pady=(10, 5))
-        """self.root0Frame.grid_rowconfigure(0, weight=1, minsize=50)
-        self.root0Frame.grid_columnconfigure(3, weight=1)"""
 
         self.root1Frame = Ctk.CTkFrame(self, corner_radius=6, fg_color="gray84", height=100)
         self.root1Frame.grid(row=1, column=0, sticky=Ctk.NSEW, padx=10, pady=(5, 5))
-        #self.root1Frame.grid_rowconfigure(0, weight=1, minsize=50)
-        #self.root1Frame.columnconfigure(0, weight=1, minsize=170)
 
         self.root2Frame = Ctk.CTkFrame(self, corner_radius=6, fg_color="gray84", height=100)
         self.root2Frame.grid(row=2, column=0, sticky=Ctk.NSEW, padx=10, pady=(5, 10))
@@ -70,7 +57,6 @@ class App(Ctk.CTk):
 
         self.clearButton = Ctk.CTkButton(self.root0Frame, text="x", width=24, text_color="gray10", bg_color="transparent", fg_color="gray84", hover_color="gray78", command=self.clearUrl)
         self.clearButton.grid(row=0, column=2, padx=(5, 10), pady=(10, 10), sticky=Ctk.NSEW)
-        #self.clearButton.bind(sequence="ButtonPress>", command=self.clearUrl)
 
         self.titleLabel = Ctk.CTkLabel(self.root1Frame, width=23, height=20, text="Title:", fg_color="#71C5E8", corner_radius=6)
         self.titleLabel.grid(row=0, column=0, padx=(10, 5), pady=(10, 10), sticky=Ctk.W)
@@ -111,16 +97,17 @@ class App(Ctk.CTk):
         self.durationLabel = Ctk.CTkLabel(master=self.root1Frame, text="" ,font=Ctk.CTkFont(size=12, weight="normal", slant="roman"), width=23, height=20, corner_radius=6, fg_color="gray78", text_color="#000000")
         self.durationLabel.grid(row=0, column=2, padx=(5, 10), pady=(5, 5), sticky="nsew")
 
-        self.videoIcon = Ctk.CTkImage(light_image=Image.open(fp='Img_Icon.png'), size=(100,100))
-        self.downloadIcon = Ctk.CTkImage(light_image=Image.open(fp='Download_Icon.png'), size=(30,30))
+        self.videoIcon = Ctk.CTkImage(light_image=Image.open(fp='./Icons/Video_Icon.png'), size=(100,100))
+        self.downloadIcon = Ctk.CTkImage(light_image=Image.open(fp='./Icons/Download_Icon.png'), size=(30,30))
 
         self.videoImage = Ctk.CTkLabel(self.root2Frame, text='', compound="center", image=self.videoIcon, fg_color='#ff0')
-        #self.videoImage.pack(anchor="w", padx=(10, 10), pady=(10, 10))
         self.videoImage.grid(row=0, column=0, padx=(5, 10), pady=(5, 5), sticky="e")
 
+        self.setPathButton = Ctk.CTkButton(master=self.root2Frame, width=30, height=36, text="Set Folder", fg_color='#ff0', command=self.setPath)
+        self.setPathButton.grid(row=0, column=1, padx=(5, 10), pady=(5, 5), sticky="w")
+
         self.downloadVideo = Ctk.CTkButton(master=self.root2Frame, width=30, height=36, text="", image=self.downloadIcon, fg_color='#ff0')
-        #self.downloadVideo.pack(anchor="e", padx=(5, 5), pady=(5, 5))
-        self.downloadVideo.grid(row=0, column=1, padx=(5, 10), pady=(5, 5), sticky="w")
+        self.downloadVideo.grid(row=0, column=2, padx=(5, 10), pady=(5, 5), sticky="w")
 
     def clearUrl(self):
 
@@ -149,10 +136,6 @@ class App(Ctk.CTk):
         self.entryURL._placeholder_text_active = True
 
     def readURL(self, event):
-
-        #self.entryURL._entry.config(takefocus=False)
-        #self.entryURL._deactivate_placeholder()
-        #self.entryURL._is_focused = True
 
         readLink = self.entryURL.get()
 
@@ -212,8 +195,6 @@ class App(Ctk.CTk):
         print(audioAbr)
         print(audioData)
 
-        #print(audioListSlice)
-
 
     def filterVideoInf(self, yt):
 
@@ -253,6 +234,14 @@ class App(Ctk.CTk):
         thumbnail = Image.open(fp='C:/Users/Daniel/Desktop/thumbnail.jpg')
         showThumbnail = Ctk.CTkImage(light_image=thumbnail, size=(thumbnail.width*(.3), thumbnail.height*(.3)))
         self.videoImage.configure(image=showThumbnail)
+
+
+    def setPath(self, **kwargs):
+
+        self.pathSet = None
+        self.pathSet = Ctk.filedialog.askdirectory()
+        print(self.pathSet)
+
 
 if __name__ == '__main__':
     app = App()
