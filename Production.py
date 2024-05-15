@@ -1,5 +1,6 @@
 
 import re
+import threading
 import ffmpeg as fm
 from PIL import Image
 from requests import *
@@ -53,7 +54,7 @@ class App(Ctk.CTk):
 
         self.entryURL = Ctk.CTkEntry(self.root0Frame, placeholder_text="Copy the URL here", text_color="#19222B", font=Ctk.CTkFont(size=12, weight="normal", slant="italic"), width=200, height=34, corner_radius=6, fg_color="#EBBDD1")
         self.entryURL.grid(row=0, column=1, padx=(5, 5), pady=(10, 10), sticky=Ctk.NSEW)
-        self.entryURL.bind("<Return>", self.readURL)
+        self.entryURL.bind("<Return>", self.clickEvent)
 
         self.clearButton = Ctk.CTkButton(self.root0Frame, text="x", width=24, text_color="gray10", bg_color="transparent", fg_color="gray84", hover_color="gray78", command=self.clearUrl)
         self.clearButton.grid(row=0, column=2, padx=(5, 10), pady=(10, 10), sticky=Ctk.NSEW)
@@ -108,6 +109,8 @@ class App(Ctk.CTk):
 
         self.downloadVideo = Ctk.CTkButton(master=self.root2Frame, width=30, height=36, text="", image=self.downloadIcon, fg_color='#ff0')
         self.downloadVideo.grid(row=0, column=2, padx=(5, 10), pady=(5, 5), sticky="w")
+        
+        #region METHODS
 
     def clearUrl(self):
 
@@ -133,11 +136,17 @@ class App(Ctk.CTk):
         self.audioCombobox.configure(values=[])
         self.videoFormatCombobox.configure(values=[])
 
-        self.entryURL._placeholder_text_active = True
 
-    def readURL(self, event):
+    def clickEvent(self, event):
 
-        readLink = self.entryURL.get()
+        self.threadDownload = Thread(target=self.readURL, name="Thread-1", daemon=True) if threading.current_thread().name != "Thread-1" else None
+
+        self.threadDownload.start()
+
+
+    def readURL(self):
+
+        readLink = self.entryURL.get()  #   https://www.youtube.com/watch?v=_jMz4QKEihM
 
         try:
             self.yt = YouTube(readLink)
@@ -157,7 +166,7 @@ class App(Ctk.CTk):
 
         print(readLink)
 
-    def showInf(self, yt):
+    def showInf(self, yt: YouTube):
 
         self.title = StringVar()
         self.autor = StringVar()
@@ -172,7 +181,7 @@ class App(Ctk.CTk):
         self.durationLabel.configure(textvariable=self.duration)
 
 
-    def filterAudioInf(self, yt):
+    def filterAudioInf(self, yt: YouTube):
 
         re.purge()
         audioStr, audioItag, audioAbr, audioData = [], [], [], []
@@ -218,7 +227,7 @@ class App(Ctk.CTk):
         print("******************************************************\n")
 
 
-    def getVideoThumbnail(self, yt):
+    def getVideoThumbnail(self, yt: YouTube):
         
         urlImage = yt.thumbnail_url
 
@@ -241,6 +250,9 @@ class App(Ctk.CTk):
         self.pathSet = None
         self.pathSet = Ctk.filedialog.askdirectory()
         print(self.pathSet)
+        '''print(threading.current_thread().name)
+        print(threading.active_count())
+        print(threading.enumerate())'''
 
 
 if __name__ == '__main__':
