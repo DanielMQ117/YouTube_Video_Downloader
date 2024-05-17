@@ -10,6 +10,7 @@ import customtkinter as Ctk
 from threading import Thread
 from bs4 import BeautifulSoup
 from tkinter import StringVar
+from collections import Counter
 from os import readlink, remove
 from pytube.exceptions import *
 from time import strftime, localtime
@@ -205,25 +206,39 @@ class App(Ctk.CTk):
         print(audioData)
 
 
-    def filterVideoInf(self, yt):
+    def filterVideoInf(self, yt: YouTube):
 
         re.purge()
-        videoStr, videoItag, videoRes, videoData = [], [], [], []
+        videoStr, videoItag, videoRes, videoFormat, resToDisplay = [], [], [], [], []
+        resAvailable, videoOptions = {}, {}
 
         # stream retorna StreamQuery
         videoStr = str(yt.streams.filter(only_video=True))
 
         videoItag = re.findall(pattern=r'itag="(\d+)"', string=videoStr)
         videoRes = re.findall(pattern=r'res="(\d+[A-z]{1,})"', string=videoStr)
+        videoFormat = re.findall(pattern=r'mime_type="([A-z]+/\w+)"', string=videoStr)
 
-        videoData = dict(zip(videoItag, videoRes, strict=True))
+        videoResCounter = Counter(videoRes)
 
-        self.videoCombobox.configure(**{"values": videoRes})
+        videoRF = list(zip(videoRes, videoFormat, strict=True))
+        repeatedVideoInfo = dict(zip(videoItag, videoRF, strict=True))
+        resAvailable = dict(zip(videoResCounter.keys(), videoResCounter.values()))   # {'2160p':1, '1440p':1, '1080p':2}
+
+        for res, quantity in resAvailable.items():
+            for itag, resAndFormat in repeatedVideoInfo.items():
+                if (res == resAndFormat[0]) and ((quantity == 1) or ((quantity > 1) and (resAndFormat[1] == "video/mp4"))):
+                    resToDisplay.append(res)
+                    videoOptions[itag] = res
+
+        self.videoCombobox.configure(**{"values": resToDisplay})
         self.videoCombobox_var.set("Video")
 
+        print(videoStr)
+        print(videoFormat)
         print(videoItag)
         print(videoRes)
-        print(videoData)
+        print(videoOptions)
         print("******************************************************\n")
 
 
