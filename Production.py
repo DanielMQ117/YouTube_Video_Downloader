@@ -63,11 +63,30 @@ class App(Ctk.CTk):
         self.titleLabel = Ctk.CTkLabel(self.root1Frame, width=23, height=20, text="Title:", fg_color="#71C5E8", corner_radius=6)
         self.titleLabel.grid(row=0, column=0, padx=(10, 5), pady=(10, 10), sticky=Ctk.W)
 
+        self.titleTextbox = Ctk.CTkEntry(master=self.root1Frame, width=200, height=20, corner_radius=6, fg_color="gray78", text_color="#000000")
+        self.titleTextbox.grid(row=0, column=1, padx=(5, 10), pady=(5, 5), sticky="nsew")
+        self.titleTextbox.configure(state="readonly")
+
         self.autorLabel = Ctk.CTkLabel(self.root1Frame, width=23, height=20, text="Autor:", fg_color="#71C5E8", corner_radius=6)
         self.autorLabel.grid(row=1, column=0, padx=(10, 5), pady=(10, 10), sticky=Ctk.W)
 
+        self.autorTextbox = Ctk.CTkEntry(master=self.root1Frame, width=200, height=20, corner_radius=6, fg_color="gray78", text_color="#000000")
+        self.autorTextbox.grid(row=1, column=1, padx=(5, 10), pady=(5, 5), sticky="nsew")
+        self.autorTextbox.configure(state="readonly")
+        
+        self.durationLabel = Ctk.CTkLabel(master=self.root1Frame, text="" ,font=Ctk.CTkFont(size=12, weight="normal", slant="roman"), width=23, height=20, corner_radius=6, fg_color="gray78", text_color="#000000")
+        self.durationLabel.grid(row=0, column=2, padx=(5, 10), pady=(5, 5), sticky="nsew")
+
+        self.setPathButton = Ctk.CTkButton(master=self.root1Frame, width=30, height=36, text="Set Folder", fg_color='#ff0', command=self.setPath)
+        self.setPathButton.grid(row=2, column=1, padx=(5, 10), pady=(5, 5), sticky="w")
+
+        self.downloadIcon = Ctk.CTkImage(light_image=Image.open(fp='./Icons/Download_Icon.png'), size=(30,30))
+
+        self.downloadVideo = Ctk.CTkButton(master=self.root1Frame, width=30, height=36, text="", image=self.downloadIcon, fg_color='#ff0')
+        self.downloadVideo.grid(row=2, column=1, padx=(5, 10), pady=(5, 5), sticky="e")
+
         self.parametersTabview = Ctk.CTkTabview(self.root1Frame, height=40, anchor="NW")
-        self.parametersTabview.grid(row=2, column=0, padx=(10, 10), pady=(10, 5), columnspan=3, sticky="nsew")
+        self.parametersTabview.grid(row=3, column=0, padx=(10, 10), pady=(10, 5), columnspan=3, sticky="nsew")
         self.parametersTabview.add("Set Quality")
 
         self.videoCombobox_var = Ctk.StringVar()
@@ -87,29 +106,11 @@ class App(Ctk.CTk):
         self.videoFormatCombobox = Ctk.CTkComboBox(self.parametersTabview.tab("Set Quality"), width=80, values=self.videoFormatItag, command=videoFormat_Combobox_callback, variable=self.videoFormatCombobox_var)
         self.videoFormatCombobox.grid(row=0, column=2, padx=(5, 5), pady=(5, 10), sticky=Ctk.E)
         self.videoFormatCombobox_var.set("format")
-        
-        self.titleTextbox = Ctk.CTkEntry(master=self.root1Frame, width=200, height=20, corner_radius=6, fg_color="gray78", text_color="#000000")
-        self.titleTextbox.grid(row=0, column=1, padx=(5, 10), pady=(5, 5), sticky="nsew")
-        self.titleTextbox.configure(state="readonly")
-
-        self.autorTextbox = Ctk.CTkEntry(master=self.root1Frame, width=200, height=20, corner_radius=6, fg_color="gray78", text_color="#000000")
-        self.autorTextbox.grid(row=1, column=1, padx=(5, 10), pady=(5, 5), sticky="nsew")
-        self.autorTextbox.configure(state="readonly")
-        
-        self.durationLabel = Ctk.CTkLabel(master=self.root1Frame, text="" ,font=Ctk.CTkFont(size=12, weight="normal", slant="roman"), width=23, height=20, corner_radius=6, fg_color="gray78", text_color="#000000")
-        self.durationLabel.grid(row=0, column=2, padx=(5, 10), pady=(5, 5), sticky="nsew")
 
         self.videoIcon = Ctk.CTkImage(light_image=Image.open(fp='./Icons/Video_Icon.png'), size=(100,100))
-        self.downloadIcon = Ctk.CTkImage(light_image=Image.open(fp='./Icons/Download_Icon.png'), size=(30,30))
 
         self.videoImage = Ctk.CTkLabel(self.root2Frame, text='', compound="center", image=self.videoIcon, fg_color='#ff0')
-        self.videoImage.grid(row=0, column=0, padx=(5, 10), pady=(5, 5), sticky="e")
-
-        self.setPathButton = Ctk.CTkButton(master=self.root2Frame, width=30, height=36, text="Set Folder", fg_color='#ff0', command=self.setPath)
-        self.setPathButton.grid(row=0, column=1, padx=(5, 10), pady=(5, 5), sticky="w")
-
-        self.downloadVideo = Ctk.CTkButton(master=self.root2Frame, width=30, height=36, text="", image=self.downloadIcon, fg_color='#ff0')
-        self.downloadVideo.grid(row=0, column=2, padx=(5, 10), pady=(5, 5), sticky="w")
+        self.videoImage.grid(row=1, column=0, padx=(5, 5), pady=(5, 5), sticky="e")
         
         #region METHODS
 
