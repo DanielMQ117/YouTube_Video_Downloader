@@ -66,6 +66,9 @@ class App(Ctk.CTk):
         self.titleTextbox = Ctk.CTkEntry(master=self.root1Frame, width=200, height=20, corner_radius=6, fg_color="gray78", text_color="#000000")
         self.titleTextbox.grid(row=0, column=1, padx=(5, 10), pady=(5, 5), sticky="nsew")
         self.titleTextbox.configure(state="readonly")
+        
+        self.durationLabel = Ctk.CTkLabel(master=self.root1Frame, text="" ,font=Ctk.CTkFont(size=12, weight="normal", slant="roman"), width=23, height=20, corner_radius=6, fg_color="gray78", text_color="#000000")
+        self.durationLabel.grid(row=0, column=2, padx=(5, 10), pady=(5, 5), sticky="nsew")
 
         self.autorLabel = Ctk.CTkLabel(self.root1Frame, width=23, height=20, text="Autor:", fg_color="#71C5E8", corner_radius=6)
         self.autorLabel.grid(row=1, column=0, padx=(10, 5), pady=(10, 10), sticky=Ctk.W)
@@ -73,9 +76,6 @@ class App(Ctk.CTk):
         self.autorTextbox = Ctk.CTkEntry(master=self.root1Frame, width=200, height=20, corner_radius=6, fg_color="gray78", text_color="#000000")
         self.autorTextbox.grid(row=1, column=1, padx=(5, 10), pady=(5, 5), sticky="nsew")
         self.autorTextbox.configure(state="readonly")
-        
-        self.durationLabel = Ctk.CTkLabel(master=self.root1Frame, text="" ,font=Ctk.CTkFont(size=12, weight="normal", slant="roman"), width=23, height=20, corner_radius=6, fg_color="gray78", text_color="#000000")
-        self.durationLabel.grid(row=0, column=2, padx=(5, 10), pady=(5, 5), sticky="nsew")
 
         self.setPathButton = Ctk.CTkButton(master=self.root1Frame, width=30, height=36, text="Set Folder", fg_color='#ff0', command=self.setPath)
         self.setPathButton.grid(row=2, column=1, padx=(5, 10), pady=(5, 5), sticky="w")
@@ -93,18 +93,21 @@ class App(Ctk.CTk):
         self.videoItag = []
         self.videoCombobox = Ctk.CTkComboBox(self.parametersTabview.tab("Set Quality"), values=self.videoItag, width=80,command=video_Combobox_callback, variable=self.videoCombobox_var)
         self.videoCombobox.grid(row=0, column=0, padx=(5, 5), pady=(5, 10), sticky=Ctk.W)
+        self.videoCombobox.configure(state="readonly")
         self.videoCombobox_var.set("Video")
 
         self.audioCombobox_var = Ctk.StringVar()
         self.showAudioItag = []
         self.audioCombobox = Ctk.CTkComboBox(self.parametersTabview.tab("Set Quality"), values=self.showAudioItag, width=80, command=audio_Combobox_callback, variable=self.audioCombobox_var)
         self.audioCombobox.grid(row=0, column=1, padx=(5, 5), pady=(5, 10), sticky=Ctk.N)
+        self.audioCombobox.configure(state="readonly")
         self.audioCombobox_var.set("Audio")
 
         self.videoFormatCombobox_var = Ctk.StringVar()
         self.videoFormatItag = [".mp3", ".mp4", ".avi", ".mkv"]
         self.videoFormatCombobox = Ctk.CTkComboBox(self.parametersTabview.tab("Set Quality"), width=80, values=self.videoFormatItag, command=videoFormat_Combobox_callback, variable=self.videoFormatCombobox_var)
         self.videoFormatCombobox.grid(row=0, column=2, padx=(5, 5), pady=(5, 10), sticky=Ctk.E)
+        self.videoFormatCombobox.configure(state="readonly")
         self.videoFormatCombobox_var.set("format")
 
         self.loadingPreviewInfo = Ctk.CTkProgressBar(self.root2Frame, width=300, height=8, corner_radius=4, orientation="horizontal", mode="determinate", determinate_speed=20)
