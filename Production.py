@@ -107,10 +107,14 @@ class App(Ctk.CTk):
         self.videoFormatCombobox.grid(row=0, column=2, padx=(5, 5), pady=(5, 10), sticky=Ctk.E)
         self.videoFormatCombobox_var.set("format")
 
+        self.loadingPreviewInfo = Ctk.CTkProgressBar(self.root2Frame, width=300, height=8, corner_radius=4, orientation="horizontal", mode="determinate", determinate_speed=20)
+        #self.loadingPreviewInfo.grid(row=0, column=0, padx=(10, 10), pady=(5, 5), sticky=Ctk.EW)
+        self.loadingPreviewInfo.set(value=0)
+
         self.videoIcon = Ctk.CTkImage(light_image=Image.open(fp='./Icons/Video_Icon.png'), size=(100,100))
 
         self.videoImage = Ctk.CTkLabel(self.root2Frame, text='', compound="center", image=self.videoIcon, fg_color='#ff0')
-        self.videoImage.grid(row=1, column=0, padx=(5, 5), pady=(5, 5), sticky="e")
+        self.videoImage.grid(row=1, column=0, padx=(5, 5), pady=(5, 5), sticky="ew")
         
         #region METHODS
 
@@ -145,6 +149,8 @@ class App(Ctk.CTk):
 
         self.threadDownload.start()
 
+        self.loadingPreviewInfo.grid(row=0, column=0, padx=(10, 10), pady=(5, 5), sticky=Ctk.EW)
+
 
     def readURL(self):
 
@@ -158,11 +164,17 @@ class App(Ctk.CTk):
             print(f' - Video {readLink} is unavaialable, skipping.')
 
         else:
-
+            
+            self.loadingPreviewInfo.step()
             self.showInf(self.yt)
+            self.loadingPreviewInfo.step()
             self.filterAudioInf(self.yt)
+            self.loadingPreviewInfo.step()
             self.filterVideoInf(self.yt)
+            self.loadingPreviewInfo.step()
             self.getVideoThumbnail(self.yt)
+            self.loadingPreviewInfo.step()
+            self.loadingPreviewInfo.grid_forget()
 
             print(self.yt.length)
 
