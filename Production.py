@@ -82,7 +82,7 @@ class App(Ctk.CTk):
 
         self.downloadIcon = Ctk.CTkImage(light_image=Image.open(fp='./Icons/Download_Icon.png'), size=(30,30))
 
-        self.downloadVideo = Ctk.CTkButton(master=self.root1Frame, width=30, height=36, text="", image=self.downloadIcon, fg_color='#ff0')
+        self.downloadVideo = Ctk.CTkButton(master=self.root1Frame, width=30, height=36, text="", image=self.downloadIcon, fg_color='#ff0', command=self.saveFile)
         self.downloadVideo.grid(row=2, column=1, padx=(5, 10), pady=(5, 5), sticky="e")
 
         self.parametersTabview = Ctk.CTkTabview(self.root1Frame, height=40, anchor="NW")
@@ -201,35 +201,41 @@ class App(Ctk.CTk):
     def filterAudioInf(self, yt: YouTube):
 
         re.purge()
-        audioStr, audioItag, audioAbr, audioData = [], [], [], []
+        audioStr, self.audioItag, audioAbr, self.audioData = [], [], [], []
 
         # stream retorna StreamQuery
-        audioStr = str(yt.streams.filter(only_audio=True))
+        self.streamsFilterAudio = yt.streams.filter(only_audio=True)
+        audioStr = str(self.streamsFilterAudio)
 
-        audioItag = re.findall(pattern=r'itag="(\d+)"', string=audioStr)
+        self.audioItag = re.findall(pattern=r'itag="(\d+)"', string=audioStr)
         audioAbr = re.findall(pattern=r'abr="(\d+[A-z]{1,})"', string=audioStr)
 
-        audioData = dict(zip(audioItag, audioAbr, strict=True))
+        audioAbR = [abr.replace("kbps", "") for abr in audioAbr]
+        audioAbR.sort(key=lambda item: int(item), reverse=True)
+        audioAbR = [(abr+"kbps") for abr in audioAbR]
 
-        self.audioCombobox.configure(**{"values": audioAbr})
+        self.audioData = dict(zip(self.audioItag, audioAbr, strict=True))
+
+        self.audioCombobox.configure(**{"values": audioAbR})
         self.audioCombobox_var.set("Audio")
 
         #audioList = audioStr
 
         print("\n******************************************************")
-        print(audioItag)
+        print(self.audioItag)
         print(audioAbr)
-        print(audioData)
+        print(self.audioData)
 
 
     def filterVideoInf(self, yt: YouTube):
 
         re.purge()
         videoStr, videoItag, videoRes, videoFormat, resToDisplay = [], [], [], [], []
-        resAvailable, videoOptions = {}, {}
+        resAvailable, self.videoOptions = {}, {}
 
         # stream retorna StreamQuery
-        videoStr = str(yt.streams.filter(only_video=True))
+        self.streamsFilterVideo = yt.streams.filter(only_video=True)
+        videoStr = str(self.streamsFilterVideo)
 
         videoItag = re.findall(pattern=r'itag="(\d+)"', string=videoStr)
         videoRes = re.findall(pattern=r'res="(\d+[A-z]{1,})"', string=videoStr)
@@ -245,7 +251,7 @@ class App(Ctk.CTk):
             for itag, resAndFormat in repeatedVideoInfo.items():
                 if (res == resAndFormat[0]) and ((quantity == 1) or ((quantity > 1) and (resAndFormat[1] == "video/mp4"))):
                     resToDisplay.append(res)
-                    videoOptions[itag] = res
+                    self.videoOptions[res] = itag
 
         self.videoCombobox.configure(**{"values": resToDisplay})
         self.videoCombobox_var.set("Video")
@@ -254,7 +260,7 @@ class App(Ctk.CTk):
         print(videoFormat)
         print(videoItag)
         print(videoRes)
-        print(videoOptions)
+        print(self.videoOptions)
         print("******************************************************\n")
 
 
@@ -284,6 +290,37 @@ class App(Ctk.CTk):
         '''print(threading.current_thread().name)
         print(threading.active_count())
         print(threading.enumerate())'''
+
+
+    def saveFile(self):
+
+        self.getItag()
+
+
+    def getItag(self):
+
+        if self.audioCombobox.cget("state") == "disabled": return
+
+        a, v, f = "", "", ""
+
+        a = self.audioCombobox.get()
+        v = self.videoCombobox.get()
+        f = self.videoFormatCombobox.get()
+
+        if a == "Audio":
+            a = self.audioItag[-2]
+        else:
+            a = list(self.audioData.keys())[list(self.audioData.values()).index(a)]
+
+        if v == "Video":
+            v = self.videoOptions["240p"] # Si no se selecciona una resolucion, toma la de 24op
+        else:
+            v = self.videoOptions[v]
+
+
+        print(a, v)
+        self.streamsFilterAudio.get_by_itag(a)
+        self.streamsFilterVideo.get_by_itag(v)
 
 
 if __name__ == '__main__':
