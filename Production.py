@@ -83,6 +83,7 @@ class App(Ctk.CTk):
         self.downloadIcon = Ctk.CTkImage(light_image=Image.open(fp='./Icons/Download_Icon.png'), size=(30,30))
 
         self.downloadVideo = Ctk.CTkButton(master=self.root1Frame, width=30, height=36, text="", image=self.downloadIcon, fg_color='#ff0', command=self.saveFile)
+        self.downloadVideo.configure(state="disabled")
         self.downloadVideo.grid(row=2, column=1, padx=(5, 10), pady=(5, 5), sticky="e")
 
         self.parametersTabview = Ctk.CTkTabview(self.root1Frame, height=40, anchor="NW")
@@ -93,14 +94,14 @@ class App(Ctk.CTk):
         self.videoItag = []
         self.videoCombobox = Ctk.CTkComboBox(self.parametersTabview.tab("Set Quality"), values=self.videoItag, width=80,command=video_Combobox_callback, variable=self.videoCombobox_var)
         self.videoCombobox.grid(row=0, column=0, padx=(5, 5), pady=(5, 10), sticky=Ctk.W)
-        self.videoCombobox.configure(state="readonly")
+        self.videoCombobox.configure(state="disabled")
         self.videoCombobox_var.set("Video")
 
         self.audioCombobox_var = Ctk.StringVar()
         self.showAudioItag = []
         self.audioCombobox = Ctk.CTkComboBox(self.parametersTabview.tab("Set Quality"), values=self.showAudioItag, width=80, command=audio_Combobox_callback, variable=self.audioCombobox_var)
         self.audioCombobox.grid(row=0, column=1, padx=(5, 5), pady=(5, 10), sticky=Ctk.N)
-        self.audioCombobox.configure(state="readonly")
+        self.audioCombobox.configure(state="disabled")
         self.audioCombobox_var.set("Audio")
 
         self.videoFormatCombobox_var = Ctk.StringVar()
@@ -145,6 +146,15 @@ class App(Ctk.CTk):
         self.audioCombobox.configure(values=[])
         self.videoFormatCombobox.configure(values=[])
 
+        self.swichtWidgetState("disabled")
+
+
+    def swichtWidgetState(self, state: str) -> None:
+
+        self.downloadVideo.configure(state=state)
+        self.videoCombobox.configure(state=state)
+        self.audioCombobox.configure(state=state)
+
 
     def clickEvent(self, event):
 
@@ -178,6 +188,7 @@ class App(Ctk.CTk):
             self.getVideoThumbnail(self.yt)
             self.loadingPreviewInfo.step()
             self.loadingPreviewInfo.grid_forget()
+            self.swichtWidgetState("readonly")
 
             print(self.yt.length)
 
@@ -298,8 +309,6 @@ class App(Ctk.CTk):
 
 
     def getItag(self):
-
-        if self.audioCombobox.cget("state") == "disabled": return
 
         a, v, f = "", "", ""
 
