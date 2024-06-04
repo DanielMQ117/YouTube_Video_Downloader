@@ -1,9 +1,11 @@
 
 import re
 import threading
+from typing import Dict, Literal
 import ffmpeg as fm
 from PIL import Image
 from requests import *
+from pathlib import Path
 from datetime import date
 from pytube import YouTube
 import customtkinter as Ctk
@@ -30,6 +32,54 @@ def audio_Combobox_callback(choice):
 
 def videoFormat_Combobox_callback(choice):
     print("combobox dropdown clicked:", choice)
+
+
+class Download_File():
+
+    tempFiles = "Temp"
+    root = Path('/').absolute().joinpath(tempFiles)
+
+    def __init__(self):
+        self._openDirectory()
+
+    def _openDirectory(self) -> bool:
+
+        try:
+            self.root.mkdir(parents=True, exist_ok=True)
+            print(f"Directorio '{self.root}' creado exitosamente.")
+
+            return True
+
+        except Exception as e:
+            print(f"No se pudo crear el directorio '{self.root}': {e}")
+
+        return False
+
+    def outputFile(self, title: str, outputPath: str = None, **kwargs) -> bool:
+
+        title = title.replace('/', '_')[:]
+        if outputPath == None: outputPath = str(Path(__file__).parent)
+        fileName = str(date.today()).replace('-', '_') + strftime(" at %I-%M-%S-%p", localtime())
+
+        audio = kwargs.pop("audio")
+        format = kwargs.pop("format")
+
+        audioPath = audio.download(output_path = str(self.root), filename = fileName, filename_prefix = '01.')
+        audio_stream = fm.input(r'{}'.format(audioPath))
+        finalFile = outputPath + '/' + title + format
+
+        if format in kwargs["fileType"]["video"]:
+
+            video = kwargs.pop("video")
+            videoPath = video.download(output_path = str(self.root), filename = fileName, filename_prefix = '02.')
+            video_stream = fm.input(r'{}'.format(videoPath))
+            fm.output(audio_stream, video_stream, finalFile).run()
+            remove(videoPath); remove(audioPath)
+            return True
+
+        fm.output(audio_stream, finalFile).run()
+        remove(audioPath)
+        return True
 
 
 class App(Ctk.CTk):
@@ -120,6 +170,8 @@ class App(Ctk.CTk):
         self.videoImage = Ctk.CTkLabel(self.root2Frame, text='', compound="center", image=self.videoIcon, fg_color='#ff0')
         self.videoImage.grid(row=1, column=0, padx=(5, 5), pady=(5, 5), sticky="ew")
         
+        self.downloader = Download_File()
+
         #region METHODS
 
     def clearUrl(self):
@@ -305,31 +357,35 @@ class App(Ctk.CTk):
 
     def saveFile(self):
 
-        self.getItag()
+        getItag = self.getItag()
+        title = self.title.get()
+        self.downloader.outputFile(title, self.pathSet, **getItag)
 
 
-    def getItag(self):
+    def getItag(self) -> Dict[Literal["audio", "video", "format"], str]:
 
         a, v, f = "", "", ""
+        fileType = {"audio": [".mp3"],"video": [".mp4", ".avi", ".webm"]}
 
         a = self.audioCombobox.get()
         v = self.videoCombobox.get()
         f = self.videoFormatCombobox.get()
+
+        if f == "formato": f = ".mp3"
 
         if a == "Audio":
             a = self.audioItag[-2]
         else:
             a = list(self.audioData.keys())[list(self.audioData.values()).index(a)]
 
+        if f in fileType["audio"]: return {"audio": a, "format": f, "fileType": fileType}
+
         if v == "Video":
             v = self.videoOptions["240p"] # Si no se selecciona una resolucion, toma la de 24op
         else:
             v = self.videoOptions[v]
 
-
-        print(a, v)
-        self.streamsFilterAudio.get_by_itag(a)
-        self.streamsFilterVideo.get_by_itag(v)
+        return {"audio": a, "video":v, "format": f, "fileType": fileType}
 
 
 if __name__ == '__main__':
