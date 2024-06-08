@@ -1,5 +1,6 @@
 
 import re
+import sys
 import threading
 from typing import Dict, Literal
 import ffmpeg as fm
@@ -57,32 +58,60 @@ class Download_File():
 
     def outputFile(self, title: str, outputPath: str = None, **kwargs) -> bool:
 
+        sys.stdin.flush(); sys.stdout.flush()
+
         title = title.replace('/', '_')[:]
         if outputPath == None: outputPath = str(Path(__file__).parent)
-        fileName = str(date.today()).replace('-', '_') + strftime(" at %I-%M-%S-%p", localtime())
+        fileName = str(date.today()).replace('-', '_') + strftime("_at_%I-%M-%S-%p", localtime())
 
-        audio = kwargs.pop("audio")
-        format = kwargs.pop("format")
+        abr = kwargs['abr'] * 1000
+        audio = kwargs['audio']
+        format = kwargs['format']
 
-        audioPath = audio.download(output_path = str(self.root), filename = fileName, filename_prefix = '01.')
-        audio_stream = fm.input(r'{}'.format(audioPath))
+        audioPath = audio.download(output_path = str(self.root), filename = fileName, filename_prefix = 'a_')
+        audio_stream = fm.input(filename = r'{}'.format(audioPath))
         finalFile = outputPath + '/' + title + format
 
         if format in kwargs["fileType"]["video"]:
 
             video = kwargs.pop("video")
-            videoPath = video.download(output_path = str(self.root), filename = fileName, filename_prefix = '02.')
-            video_stream = fm.input(r'{}'.format(videoPath))
-            fm.output(audio_stream, video_stream, finalFile).run()
+            videoPath = video.download(output_path = str(self.root), filename = fileName, filename_prefix = 'v_')
+            video_stream = fm.input(filename = r'{}'.format(videoPath))
+            (
+                fm
+                .output(audio_stream,
+                        video_stream,
+                        finalFile,
+                        threads=9,
+                        acodec='aac',
+                        audio_bitrate=abr,
+                        vcodec='h264',
+                        bufsize='1.5M',
+                        metadata=f"title={title}")
+                .run(overwrite_output=False)
+            )
             remove(videoPath); remove(audioPath)
-            return True
 
-        fm.output(audio_stream, finalFile).run()
+            return True
+        (
+            fm
+            .output(audio_stream,
+                    finalFile,
+                    threads=3,
+                    acodec='libmp3lame',
+                    audio_bitrate=abr,
+                    bufsize=(abr*1.5),
+                    metadata=f"title={title}")
+            .run(overwrite_output=False)
+        )
         remove(audioPath)
+
         return True
 
 
 class App(Ctk.CTk):
+
+    pathSet = None
 
     def __init__(self):
 
@@ -286,7 +315,7 @@ class App(Ctk.CTk):
 
         print("\n******************************************************")
         print(self.audioItag)
-        print(audioAbr)
+        print(audioStr)
         print(self.audioData)
 
 
@@ -347,7 +376,6 @@ class App(Ctk.CTk):
 
     def setPath(self, **kwargs):
 
-        self.pathSet = None
         self.pathSet = Ctk.filedialog.askdirectory()
         print(self.pathSet)
         '''print(threading.current_thread().name)
@@ -362,30 +390,36 @@ class App(Ctk.CTk):
         self.downloader.outputFile(title, self.pathSet, **getItag)
 
 
-    def getItag(self) -> Dict[Literal["audio", "video", "format"], str]:
+    def getItag(self) -> Dict[Literal["audio", "abr", "video", "format"], str]:
 
-        a, v, f = "", "", ""
-        fileType = {"audio": [".mp3"],"video": [".mp4", ".avi", ".webm"]}
+        suffix = "kbps"
+        fileType = {"audio": [".mp3"],"video": [".mp4", ".avi", ".mkv" ,".webm"]}
 
         a = self.audioCombobox.get()
         v = self.videoCombobox.get()
         f = self.videoFormatCombobox.get()
 
-        if f == "formato": f = ".mp3"
+        if f == "format": f = ".mp3"
 
         if a == "Audio":
             a = self.audioItag[-2]
+            abr = int(self.audioData[a].removesuffix(suffix))
         else:
+            abr = int(a.removesuffix(suffix))
             a = list(self.audioData.keys())[list(self.audioData.values()).index(a)]
 
-        if f in fileType["audio"]: return {"audio": a, "format": f, "fileType": fileType}
+        a = self.streamsFilterAudio.get_by_itag(int(a))
+
+        if f in fileType["audio"]: return {"audio": a, "abr": abr, "format": f, "fileType": fileType}
 
         if v == "Video":
             v = self.videoOptions["240p"] # Si no se selecciona una resolucion, toma la de 24op
         else:
             v = self.videoOptions[v]
 
-        return {"audio": a, "video":v, "format": f, "fileType": fileType}
+        v = self.streamsFilterVideo.get_by_itag(int(v))
+
+        return {"audio": a, "abr": abr, "video": v, "format": f, "fileType": fileType}
 
 
 if __name__ == '__main__':
