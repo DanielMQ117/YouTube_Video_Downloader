@@ -173,7 +173,7 @@ class App(Ctk.CTk):
 
         self.downloadIcon = Ctk.CTkImage(light_image=Image.open(fp="./Icons/Download_Icon.png"), size=(26,26))
 
-        self.downloadVideo = Ctk.CTkButton(master=self.root1Frame, width=110, height=34, corner_radius=17, text='Download', image=self.downloadIcon, fg_color='#71C5E8', command=self.saveFile, compound=Ctk.RIGHT)
+        self.downloadVideo = Ctk.CTkButton(master=self.root1Frame, width=110, height=34, corner_radius=17, text_color='#000000', text='Download', font=self.font, image=self.downloadIcon, fg_color='#8a2be2', command=self.saveFile, compound=Ctk.RIGHT)
         self.downloadVideo.configure(state='disabled')
         self.downloadVideo.grid(row=2, column=1, padx=(5, 5), pady=(5, 5), sticky='e')
 
@@ -317,26 +317,18 @@ class App(Ctk.CTk):
         self.audioItag = re.findall(pattern=r'itag="(\d+)"', string=audioStr)
         audioAbr = re.findall(pattern=r'abr="(\d+[A-z]{1,})"', string=audioStr)
 
-        audioAbR = [abr.replace(self.suffix, '') for abr in audioAbr]
-        audioAbR.sort(key=lambda item: int(item), reverse=True)
-        audioAbR = [(abr + self.suffix) for abr in audioAbR]
-
         self.audioData = dict(zip(self.audioItag, audioAbr, strict=True))
+        audioAbr.sort(key = lambda item: int(item.replace(self.suffix, '')), reverse=True)
 
-        self.audioCombobox.configure(**{'values': audioAbR})
+        self.audioCombobox.configure(**{'values': audioAbr})
         self.audioCombobox_var.set('Audio')
-
-        print('\n******************************************************')
-        print(self.audioItag)
-        print(audioStr)
-        print(self.audioData)
 
 
     def filterVideoInf(self, yt: YouTube):
 
         re.purge()
         videoStr, videoItag, videoRes, videoFormat, resToDisplay = [], [], [], [], []
-        resAvailable, self.videoOptions = {}, {}
+        self.videoData = {}
 
         # stream retorna StreamQuery
         self.streamsFilterVideo = yt.streams.filter(only_video=True)
@@ -346,27 +338,18 @@ class App(Ctk.CTk):
         videoRes = re.findall(pattern=r'res="(\d+[A-z]{1,})"', string=videoStr)
         videoFormat = re.findall(pattern=r'mime_type="([A-z]+/\w+)"', string=videoStr)
 
-        videoResCounter = Counter(videoRes)
+        repeatedRes = Counter(videoRes)   # {'2160p':1, '1440p':1, '1080p':2}
+        res = list(repeatedRes.keys())    # ['2160p', '1440p', '1080p']
+        rep = list(repeatedRes.values())  # [1, 1, 2]
 
-        videoRF = list(zip(videoRes, videoFormat, strict=True))
-        repeatedVideoInfo = dict(zip(videoItag, videoRF, strict=True))
-        resAvailable = dict(zip(videoResCounter.keys(), videoResCounter.values()))   # {'2160p':1, '1440p':1, '1080p':2}
+        for i in range(0, len(res)):
+            for j in range(0, len(videoRes)):
+                if (videoRes[j] == res[i]) and ((rep[i] == 1) or (videoFormat[j] == 'video/mp4')):
+                    self.videoData[videoRes[j]] = videoItag[j]
 
-        for res, quantity in resAvailable.items():
-            for itag, resAndFormat in repeatedVideoInfo.items():
-                if (res == resAndFormat[0]) and ((quantity == 1) or ((quantity > 1) and (resAndFormat[1] == 'video/mp4'))):
-                    resToDisplay.append(res)
-                    self.videoOptions[res] = itag
-
-        self.videoCombobox.configure(**{'values': resToDisplay})
+        resToDisplay = list(self.videoData.keys())
+        self.videoCombobox.configure(values = resToDisplay)
         self.videoCombobox_var.set('Video')
-
-        print(videoStr)
-        print(videoFormat)
-        print(videoItag)
-        print(videoRes)
-        print(self.videoOptions)
-        print('******************************************************\n')
 
 
     def getVideoThumbnail(self, yt: YouTube):
@@ -419,9 +402,9 @@ class App(Ctk.CTk):
         if f in self.fileType['audio']: return {'audio': a, 'abr': abr, 'format': f, 'fileType': self.fileType}
 
         if v == 'Video':
-            v = self.videoOptions['240p'] # Si no se selecciona una resolucion, toma la de 24op
+            v = self.videoData['240p'] # Si no se selecciona una resolucion, toma la de 24op
         else:
-            v = self.videoOptions[v]
+            v = self.videoData[v]
 
         v = self.streamsFilterVideo.get_by_itag(int(v))
 
