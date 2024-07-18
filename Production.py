@@ -35,6 +35,13 @@ def videoFormat_Combobox_callback(choice):
     print('combobox dropdown clicked:', choice)
 
 
+def existsThread(name: str) -> bool:
+    # Itera sobre todos los hilos activos
+    for th in threading.enumerate():
+        if th.name == name: return True
+    return False
+
+
 class Download_File():
 
     tempFiles = 'Temp'
@@ -107,6 +114,14 @@ class Download_File():
         remove(audioPath)
 
         return True
+
+    def saveFile(self, title, outputPath, **kwargs):
+
+        if existsThread('Thread-2'):
+            self.threadSave = Thread(target=self.outputFile, name='Thread-2', args=(title, outputPath), kwargs=kwargs, daemon=True) 
+            self.threadSave.start()
+        else:
+            return 0
 
 
 class App(Ctk.CTk):
@@ -254,8 +269,11 @@ class App(Ctk.CTk):
     
     def clickEvent(self, event):
 
-        self.threadDownload = Thread(target=self.readURL, name='Thread-1', daemon=True) if threading.current_thread().name != 'Thread-1' else None
-        self.threadDownload.start()
+        if existsThread('Thread-1'):
+            self.threadDownload = Thread(target=self.readURL, name='Thread-1', daemon=True) 
+            self.threadDownload.start()
+        else:
+            return 0
 
         self.loadingPreviewInfo.place(relx=0.5, rely=0.5, anchor='center')
 
@@ -379,7 +397,7 @@ class App(Ctk.CTk):
 
         getItag = self.getItag()
         title = self.title.get()
-        self.downloader.outputFile(title, self.pathSet, **getItag)
+        self.downloader.saveFile(title, self.pathSet, **getItag)
 
 
     def getItag(self) -> Dict[Literal['audio', 'abr', 'video', 'format', 'fileType'], str]:
@@ -420,9 +438,3 @@ if __name__ == '__main__':
 #https://docs.python.org/es/3/library/re.html
 #https://docs.python.org/es/3/library/functions.html#zip
 #['blue', 'green', 'dark-blue', 'sweetkind']
-
-#audioListSlice = re.split(pattern='>, <', string=audioStr)
-#audioList = re.findall(pattern=r'([A-z]{4})='(\d+)'', string=audioStr)
-#audioList = re.findall(pattern=r'(itag='(\d+)')', string=audioStr)
-#audioList = re.findall(pattern='itag=[0-9]*', string=audioStr)
-#audioList = re.findall(pattern=r'(itag='[0-9]*')', string=audioStr)
