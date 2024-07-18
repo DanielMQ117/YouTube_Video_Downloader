@@ -360,10 +360,10 @@ class App(Ctk.CTk):
         res = list(repeatedRes.keys())    # ['2160p', '1440p', '1080p']
         rep = list(repeatedRes.values())  # [1, 1, 2]
 
-        for i in range(0, len(res)):
-            for j in range(0, len(videoRes)):
-                if (videoRes[j] == res[i]) and ((rep[i] == 1) or (videoFormat[j] == 'video/mp4')):
-                    self.videoData[videoRes[j]] = videoItag[j]
+        for i, v in enumerate(res):
+            for j, v_ in enumerate(videoRes):
+                if (v_ == v) and ((rep[i] == 1) or (videoFormat[j] == 'video/mp4')):
+                    self.videoData[v_] = videoItag[j]
 
         resToDisplay = list(self.videoData.keys())
         self.videoCombobox.configure(values = resToDisplay)
