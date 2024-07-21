@@ -275,13 +275,15 @@ class App(Ctk.CTk):
 
     def convertToMinutes(self, duration: int = 0) -> str:
 
-        time = duration/60
-        minutes = duration//60
-        seconds = 60 * (time - minutes)
-        min = '{:02d}:{:02.0f}'.format(minutes, seconds)
+        hour = duration // 3600
+        minutes = (duration % 3600) // 60
+        seconds_res = duration % 60
 
-        return min
-    
+        if hour > 0:
+            return '{:02d}:{:02d}:{:02d}'.format(hour, minutes, seconds_res)
+        else:
+            return '{:02d}:{:02d}'.format(minutes, seconds_res)
+
     def clickEvent(self, event):
 
         exists = existsThread('Thread-1')
