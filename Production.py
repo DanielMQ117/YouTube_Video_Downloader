@@ -391,17 +391,18 @@ class App(Ctk.CTk):
 
     def getVideoThumbnail(self, yt: YouTube):
         
+        name = str(self.downloader.root) + '\\thumbnail.jpg'
         urlImage = yt.thumbnail_url
         response = get(urlImage)
 
         if response.status_code == 200:
-            with open("C:/Users/Daniel/Desktop/thumbnail.jpg", 'wb') as file:
+            with open(name, 'wb') as file:
                 file.write(response.content)
 
         print('Image: ' + urlImage)
 
         # open and load de images for displays it in GUI
-        thumbnail = Image.open(fp="C:/Users/Daniel/Desktop/thumbnail.jpg")
+        thumbnail = Image.open(fp=name)
         showThumbnail = Ctk.CTkImage(light_image=thumbnail, size=(thumbnail.width*(.3), thumbnail.height*(.3)))
         self.videoImage.configure(image=showThumbnail)
 
