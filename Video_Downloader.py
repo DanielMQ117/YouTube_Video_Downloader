@@ -75,15 +75,15 @@ class Download_File():
         audio = kwargs['audio']
         format = kwargs['format']
 
-        audioPath = audio.download(output_path = str(self.root), filename = fileName, filename_prefix = 'a_')
-        audio_stream = fm.input(filename = r'{}'.format(audioPath))
+        audioPath = audio.download(output_path=str(self.root), filename=fileName, filename_prefix='a_')
+        audio_stream = fm.input(filename=r'{}'.format(audioPath))
         finalFile = outputPath + '/' + title + format
 
         if format in kwargs['fileType']['video']:
 
             video = kwargs['video']
-            videoPath = video.download(output_path = str(self.root), filename = fileName, filename_prefix = 'v_')
-            video_stream = fm.input(filename = r'{}'.format(videoPath))
+            videoPath = video.download(output_path=str(self.root), filename=fileName, filename_prefix='v_')
+            video_stream = fm.input(filename=r'{}'.format(videoPath))
             (
                 fm
                 .output(audio_stream,
