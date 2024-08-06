@@ -131,7 +131,7 @@ class App(Ctk.CTk):
     pathSet = None
     height = 34
     suffix = 'kbps'
-    fileType = {'audio': ['.mp3'], 'video': ['.mp4', '.avi', '.mkv', '.webm']}
+    fileType = {'audio': ['.mp3'], 'video': ['.mp4', '.avi', '.mkv']}
     videoFormatItag = []
     videoFormatItag.extend(fileType['audio'])
     videoFormatItag.extend(fileType['video'])
