@@ -11,7 +11,6 @@ from datetime import date
 from pytube import YouTube
 import customtkinter as Ctk
 from threading import Thread
-from bs4 import BeautifulSoup
 from tkinter import StringVar
 from collections import Counter
 from pytube.exceptions import *
@@ -20,7 +19,7 @@ from typing import Dict, Literal
 from time import strftime, localtime
 
 # prevent IDE from removing unused imports
-_ = re, StringVar, fm, YouTube, Image, readlink, remove, date, Ctk, strftime, localtime, BeautifulSoup
+_ = re, StringVar, fm, YouTube, Image, readlink, remove, date, Ctk, strftime, localtime
 
 Ctk.set_appearance_mode('light')
 Ctk.set_default_color_theme('green')
@@ -299,7 +298,7 @@ class App(Ctk.CTk):
 
     def readURL(self):
 
-        readLink = self.entryURL.get()  #   https://www.youtube.com/watch?v=_jMz4QKEihM
+        readLink = self.entryURL.get()
 
         try:
             self.yt = YouTube(readLink)
@@ -452,9 +451,3 @@ class App(Ctk.CTk):
 if __name__ == '__main__':
     app = App()
     app.mainloop()
-
-
-
-#https://docs.python.org/es/3/library/re.html
-#https://docs.python.org/es/3/library/functions.html#zip
-#['blue', 'green', 'dark-blue', 'sweetkind']
