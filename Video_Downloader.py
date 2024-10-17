@@ -2,6 +2,7 @@
 import re
 import sys
 import threading
+from cycler import V
 import ffmpeg as fm
 from PIL import Image
 from requests import *
@@ -46,6 +47,7 @@ class Download_File():
 
     tempFiles = 'Temp'
     root = Path('/').absolute().joinpath(tempFiles)
+    fileType = {'audio': ['.mp3'], 'video': ['.mp4', '.avi', '.mkv']}
 
     def __init__(self):
         self._openDirectory()
@@ -79,7 +81,7 @@ class Download_File():
         audio_stream = fm.input(filename=r'{}'.format(audioPath))
         finalFile = outputPath + '/' + title + format
 
-        if format in kwargs['fileType']['video']:
+        if format in self.fileType['video']:
 
             video = kwargs['video']
             videoPath = video.download(output_path=str(self.root), filename=fileName, filename_prefix='v_')
@@ -330,7 +332,7 @@ class App(Ctk.CTk):
 
     def showInf(self, yt: YouTube):
 
-        min = self.convertToMinutes(yt.length)
+        min = self.convertToMinutes(duration=yt.length)
 
         self.title.set(yt.title)
         self.autor.set(yt.author)
@@ -382,7 +384,7 @@ class App(Ctk.CTk):
             for j, v_ in enumerate(videoRes):
                 if (v_ == v) and ((rep[i] == 1) or (videoFormat[j] == 'video/mp4')):
                     self.videoData[v_] = videoItag[j]
-
+        print(self.videoData)
         resToDisplay = list(self.videoData.keys())
         self.videoCombobox.configure(values = resToDisplay)
         self.videoCombobox_var.set('Video')
@@ -414,38 +416,45 @@ class App(Ctk.CTk):
 
     def saveFile(self):
 
-        getItag = self.getItag()
+        getItag = self.getVideoStream()
         title = self.title.get()
         self.downloader.saveFile(title, self.pathSet, **getItag)
 
 
-    def getItag(self) -> Dict[Literal['audio', 'abr', 'video', 'format', 'fileType'], str]:
+    def getItags(self, aud: str = 'Audio', vid: str = 'Video') -> Dict[Literal['aud', 'vid'], int]:
 
+        itags = {}
+
+        def setAud() -> str:
+            for itag, aBr in self.audioData.items():
+                if aud == aBr: return itag
+
+        itags['aud'] = int(self.audioItag[-1] if 'Audio' == aud else setAud())
+        itags['vid'] = int(list(self.videoData.values())[-1] if 'Video' == vid else self.videoData[vid])
+
+        return itags
+
+
+    def getVideoStream(self) -> Dict[Literal['audio', 'abr', 'video', 'format'], str]:
+
+        videoStream = {}
         a = self.audioCombobox.get()
         v = self.videoCombobox.get()
         f = self.videoFormatCombobox.get()
 
-        if f == '.format': f = '.mp3'
+        itags = self.getItags(aud=a, vid=v)
+        abr = int(a.removesuffix(self.suffix))
 
-        if a == 'Audio':
-            a = self.audioItag[-2]
-            abr = int(self.audioData[a].removesuffix(self.suffix))
-        else:
-            abr = int(a.removesuffix(self.suffix))
-            a = list(self.audioData.keys())[list(self.audioData.values()).index(a)]
+        if f == '.format':
+            f = '.mp3'
 
-        a = self.streamsFilterAudio.get_by_itag(int(a))
+        videoStream = {'abr': abr, 'format': f}
+        videoStream['audio'] = self.streamsFilterAudio.get_by_itag(itags['aud'])
 
-        if f in self.fileType['audio']: return {'audio': a, 'abr': abr, 'format': f, 'fileType': self.fileType}
+        if f in self.fileType['video']:
+            videoStream['video'] = self.streamsFilterVideo.get_by_itag(itags['vid'])
 
-        if v == 'Video':
-            v = self.videoData['240p'] # Si no se selecciona una resolucion, toma la de 24op
-        else:
-            v = self.videoData[v]
-
-        v = self.streamsFilterVideo.get_by_itag(int(v))
-
-        return {'audio': a, 'abr': abr, 'video': v, 'format': f, 'fileType': self.fileType}
+        return videoStream
 
 
 if __name__ == '__main__':
