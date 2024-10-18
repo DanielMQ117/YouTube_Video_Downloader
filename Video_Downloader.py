@@ -1,26 +1,19 @@
 
 import re
-import sys
-import threading
-from cycler import V
-import ffmpeg as fm
+from Lib import *
 from PIL import Image
-from requests import *
 from Theme import colors
-from pathlib import Path
-from datetime import date
 from pytube import YouTube
 import customtkinter as Ctk
 from threading import Thread
 from tkinter import StringVar
 from collections import Counter
 from pytube.exceptions import *
-from os import readlink, remove
 from typing import Dict, Literal
-from time import strftime, localtime
+from Multimedia import Download_File
 
 # prevent IDE from removing unused imports
-_ = re, StringVar, fm, YouTube, Image, readlink, remove, date, Ctk, strftime, localtime
+_ = re, StringVar, YouTube, Image, Ctk
 
 Ctk.set_appearance_mode('light')
 Ctk.set_default_color_theme('green')
@@ -34,98 +27,6 @@ def audio_Combobox_callback(choice):
 
 def videoFormat_Combobox_callback(choice):
     print('combobox dropdown clicked:', choice)
-
-
-def existsThread(name: str) -> bool:
-    # Itera sobre todos los hilos activos
-    for th in threading.enumerate():
-        if th.name == name: return True
-    return False
-
-
-class Download_File():
-
-    tempFiles = 'Temp'
-    root = Path('/').absolute().joinpath(tempFiles)
-    fileType = {'audio': ['.mp3'], 'video': ['.mp4', '.avi', '.mkv']}
-
-    def __init__(self):
-        self._openDirectory()
-
-    def _openDirectory(self) -> bool:
-
-        try:
-            self.root.mkdir(parents=True, exist_ok=True)
-            print(f'Directorio "{self.root}" creado exitosamente.')
-
-            return True
-
-        except Exception as e:
-            print(f'No se pudo crear el directorio "{self.root}": {e}')
-
-        return False
-
-    def outputFile(self, title: str, outputPath: str = None, **kwargs) -> bool:
-
-        sys.stdin.flush(); sys.stdout.flush()
-
-        title = title.replace('/', '_')[:]
-        if outputPath == None: outputPath = str(Path(__file__).parent)
-        fileName = str(date.today()).replace('-', '_') + strftime("_at_%I-%M-%S-%p", localtime())
-
-        abr = kwargs['abr'] * 1000
-        audio = kwargs['audio']
-        format = kwargs['format']
-
-        audioPath = audio.download(output_path=str(self.root), filename=fileName, filename_prefix='a_')
-        audio_stream = fm.input(filename=r'{}'.format(audioPath))
-        finalFile = outputPath + '/' + title + format
-
-        if format in self.fileType['video']:
-
-            video = kwargs['video']
-            videoPath = video.download(output_path=str(self.root), filename=fileName, filename_prefix='v_')
-            video_stream = fm.input(filename=r'{}'.format(videoPath))
-            (
-                fm
-                .output(audio_stream,
-                        video_stream,
-                        finalFile,
-                        threads=9,
-                        acodec='aac',
-                        audio_bitrate=abr,
-                        vcodec='h264',
-                        bufsize='6.5M',
-                        metadata=f'title={title}')
-                .run(overwrite_output=False)
-            )
-            remove(videoPath); remove(audioPath)
-
-            return True
-        (
-            fm
-            .output(audio_stream,
-                    finalFile,
-                    threads=3,
-                    acodec='libmp3lame',
-                    audio_bitrate=abr,
-                    bufsize=(abr*1.5),
-                    metadata=f'title={title}')
-            .run(overwrite_output=False)
-        )
-        remove(audioPath)
-
-        return True
-
-    def saveFile(self, title, outputPath, **kwargs):
-
-        exists = existsThread('Thread-2')
-
-        if not exists:
-            self.threadSave = Thread(target=self.outputFile, name='Thread-2', args=(title, outputPath), kwargs=kwargs, daemon=True) 
-            self.threadSave.start()
-        else:
-            return 0
 
 
 class App(Ctk.CTk):
@@ -264,7 +165,7 @@ class App(Ctk.CTk):
         self.swichtWidgetState('disabled')
 
 
-    def swichtWidgetState(self, state: str) -> None:
+    def swichtWidgetState(self, state: Literal['readonly', 'disable']) -> None:
 
         if state == 'readonly':
             fg_c1=colors[7]; fg_c2=colors[0]; cursor='hand2'; bbc=colors[5]
@@ -274,16 +175,6 @@ class App(Ctk.CTk):
         self.videoCombobox.configure(state=state, fg_color=fg_c2, button_color=bbc, border_color=bbc)
         self.audioCombobox.configure(state=state, fg_color=fg_c2, button_color=bbc, border_color=bbc)
 
-    def convertToMinutes(self, duration: int = 0) -> str:
-
-        hour = duration // 3600
-        minutes = (duration % 3600) // 60
-        seconds_res = duration % 60
-
-        if hour > 0:
-            return '{:02d}:{:02d}:{:02d}'.format(hour, minutes, seconds_res)
-        else:
-            return '{:02d}:{:02d}'.format(minutes, seconds_res)
 
     def clickEvent(self, event):
 
@@ -304,15 +195,10 @@ class App(Ctk.CTk):
 
         try:
             self.yt = YouTube(readLink)
-
         except VideoUnavailable:
             print(f' - Video {readLink} is unavaialable, skipping.')
         else:
             self.loadInf()
-
-            print(self.yt.length)
-
-        print(readLink)
 
 
     def loadInf(self):
@@ -324,7 +210,7 @@ class App(Ctk.CTk):
         self.loadingPreviewInfo.step()
         self.filterVideoInf(self.yt)
         self.loadingPreviewInfo.step()
-        self.getVideoThumbnail(self.yt)
+        self.setVideoThumbnail(self.yt, self.downloader.root)
         self.loadingPreviewInfo.step()
         self.loadingPreviewInfo.place_forget()
         self.swichtWidgetState('readonly')
@@ -332,7 +218,7 @@ class App(Ctk.CTk):
 
     def showInf(self, yt: YouTube):
 
-        min = self.convertToMinutes(duration=yt.length)
+        min = convertToMinutes(duration=yt.length)
 
         self.title.set(yt.title)
         self.autor.set(yt.author)
@@ -384,23 +270,15 @@ class App(Ctk.CTk):
             for j, v_ in enumerate(videoRes):
                 if (v_ == v) and ((rep[i] == 1) or (videoFormat[j] == 'video/mp4')):
                     self.videoData[v_] = videoItag[j]
-        print(self.videoData)
+
         resToDisplay = list(self.videoData.keys())
         self.videoCombobox.configure(values = resToDisplay)
         self.videoCombobox_var.set('Video')
 
 
-    def getVideoThumbnail(self, yt: YouTube):
-        
-        name = str(self.downloader.root) + '\\thumbnail.jpg'
-        urlImage = yt.thumbnail_url
-        response = get(urlImage)
+    def setVideoThumbnail(self, yt: YouTube, root: Path):
 
-        if response.status_code == 200:
-            with open(name, 'wb') as file:
-                file.write(response.content)
-
-        print('Image: ' + urlImage)
+        name = getThumbnail(url=yt.thumbnail_url, root=root)
 
         # open and load de images for displays it in GUI
         thumbnail = Image.open(fp=name)
@@ -409,52 +287,28 @@ class App(Ctk.CTk):
 
 
     def setPath(self, **kwargs):
-
         self.pathSet = Ctk.filedialog.askdirectory()
-        print(self.pathSet)
 
 
     def saveFile(self):
 
-        getItag = self.getVideoStream()
+        media = self.getMultimedia()
         title = self.title.get()
-        self.downloader.saveFile(title, self.pathSet, **getItag)
+        self.downloader.saveFile(title, self.pathSet, **media)
 
 
-    def getItags(self, aud: str = 'Audio', vid: str = 'Video') -> Dict[Literal['aud', 'vid'], int]:
+    def getMultimedia(self):
 
-        itags = {}
-
-        def setAud() -> str:
-            for itag, aBr in self.audioData.items():
-                if aud == aBr: return itag
-
-        itags['aud'] = int(self.audioItag[-1] if 'Audio' == aud else setAud())
-        itags['vid'] = int(list(self.videoData.values())[-1] if 'Video' == vid else self.videoData[vid])
-
-        return itags
-
-
-    def getVideoStream(self) -> Dict[Literal['audio', 'abr', 'video', 'format'], str]:
-
-        videoStream = {}
+        streams = {}
         a = self.audioCombobox.get()
         v = self.videoCombobox.get()
         f = self.videoFormatCombobox.get()
 
-        itags = self.getItags(aud=a, vid=v)
-        abr = int(a.removesuffix(self.suffix))
-
-        if f == '.format':
-            f = '.mp3'
-
-        videoStream = {'abr': abr, 'format': f}
-        videoStream['audio'] = self.streamsFilterAudio.get_by_itag(itags['aud'])
-
-        if f in self.fileType['video']:
-            videoStream['video'] = self.streamsFilterVideo.get_by_itag(itags['vid'])
-
-        return videoStream
+        itags = getItags(self.audioData, self.videoData, aud=a, vid=v)
+        streams = getVideoStream(self.streamsFilterAudio, self.streamsFilterVideo, itags, f, self.fileType['video'])
+        streams['abr'] = int(a.removesuffix(self.suffix))
+        
+        return streams
 
 
 if __name__ == '__main__':
